@@ -12,13 +12,14 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
-      - name: Install & build
-        run: |
-          npm ci
-          npm run build
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build Next.js
+        run: npm run build
         env:
           NODE_ENV: production
 
@@ -29,7 +30,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.IONOS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Sync build to IONOS
+      - name: Sync build to IONOS via rsync
         run: |
           rsync -az --delete \
             -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
