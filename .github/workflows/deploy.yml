@@ -1,1 +1,54 @@
+name: Deploy to IONOS
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install & build
+        run: |
+          npm ci
+          npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.IONOS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.IONOS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Sync build to IONOS
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            .next/standalone/ \
+            ${{ secrets.IONOS_USER }}@${{ secrets.IONOS_HOST }}:/var/www/pinerobase/
+
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            .next/static/ \
+            ${{ secrets.IONOS_USER }}@${{ secrets.IONOS_HOST }}:/var/www/pinerobase/.next/static/
+
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no" \
+            public/ \
+            ${{ secrets.IONOS_USER }}@${{ secrets.IONOS_HOST }}:/var/www/pinerobase/public/
+
+      - name: Reload PM2
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -o StrictHostKeyChecking=no \
+            ${{ secrets.IONOS_USER }}@${{ secrets.IONOS_HOST }} \
+            "pm2 reload pinerobase --update-env && echo Deployed: $(date)"
