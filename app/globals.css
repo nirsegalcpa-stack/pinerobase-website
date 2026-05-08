@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@layer components {
+  .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-lg bg-pnb-gold px-6 py-3 text-sm font-semibold text-pnb-black transition-all hover:bg-pnb-gold-light; }
+  .btn-secondary { @apply inline-flex items-center gap-2 rounded-lg border border-pnb-border bg-transparent px-6 py-3 text-sm font-semibold text-pnb-white transition-all hover:border-pnb-gold hover:text-pnb-gold; }
+  .section-padding { @apply px-4 py-16 md:px-8 md:py-24; }
+  .container-content { @apply mx-auto max-w-content; }
+  .page-hero { @apply border-b border-pnb-border px-4 py-20 md:px-8 md:py-28; }
+  .tag { @apply inline-block rounded-full border border-pnb-border px-3 py-1 text-xs font-medium uppercase tracking-widest text-pnb-muted; }
+}
